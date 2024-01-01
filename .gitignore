@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules/
+
+# TypeScript build output
+dist/
+*.js
+*.js.map
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Editor specific files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build process
+build/
+out/
+
+# Compiled JavaScript
+*.js
