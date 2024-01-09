@@ -9,23 +9,20 @@ import UserReactionRoute from "./routes/userReactionRoute";
 import CommentsRouter from "./routes/commentsRoute";
 import RepliesRoute from "./routes/repliesRoute";
 import CategoryRouter from "./routes/categoriesRoute";
-
+import cors from "cors";
+import ImagesRouter from "./routes/imageRoute";
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-console.log(
-  process.env.R2_ACCOUNT_ID,
-  process.env.R2_ACCESS_KEY,
-  process.env.R2_SECRET_ACCESS_KEY
-);
+app.use(cors());
 app.use(express.json());
 app.get("/", (req: Request, res: Response) => {
   res.send(`<div style=background-color:red;>
   Welcome to my Blog but don't stay for long time 
   </div>`);
 });
-
+app.use("/image", ImagesRouter);
 app.use("/user", UserRouter);
 app.use("/blogs", BlogsRouter);
 app.use("/user-reaction", UserReactionRoute);

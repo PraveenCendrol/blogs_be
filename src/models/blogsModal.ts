@@ -1,63 +1,19 @@
 import mongoose, { Model, Schema, Types, model } from "mongoose";
 
-// Additional types
-interface IEmbedded {
-  startIndex: number;
-  endIndex: number;
-  url: string;
-}
-
-interface CommonContentProps {
-  index: number;
-}
-
-interface TextStyle extends CommonContentProps {
-  type: "text";
-  data: string;
-  embeddedLink?: IEmbedded[];
-  style: "heading" | "subheading" | "underline";
-}
-
-interface ImageStyle extends CommonContentProps {
-  type: "image";
-  data: string;
-  style: "large" | "medium" | "small";
-}
-interface BreakerStyle extends CommonContentProps {
-  type: "breaker";
-}
-
 // Main Blog Type
 
-type ContentItem = TextStyle | ImageStyle | BreakerStyle;
 export interface IBlogContent extends Document {
   _id: Schema.Types.ObjectId;
   title: string;
-  content: ContentItem[];
+  content: string;
   author: Schema.Types.ObjectId;
   hashtags: string[];
+  readtime: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
 // content schema
-const contentItemSchema = new Schema<ContentItem>({
-  type: { type: String, required: true, enum: ["text", "image", "breaker"] },
-  data: { type: String },
-  style: {
-    type: String,
-    enum: [
-      "heading",
-      "subheading",
-      "underline",
-      "large",
-      "medium",
-      "small",
-      "breaker",
-    ],
-  },
-  index: { type: Number, required: true },
-});
 
 // schema
 
@@ -68,10 +24,10 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
   {
     title: {
       type: String,
-      required: [true, "A Blog must have a type"],
+      required: [true, "A Blog must have a title"],
       trim: true,
     },
-    content: [contentItemSchema],
+    content: String,
     author: {
       type: mongoose.Types.ObjectId,
       ref: "User",
@@ -80,12 +36,29 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
     hashtags: {
       type: [String],
     },
+    images: {
+      type: [String],
+    },
+    readtime: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
+
+blogPostSchema.pre<IBlogContent>("save", function (this, next) {
+  const wordsPerMinute = 200;
+  const words = this.content.trim().split(/\s+/).length;
+  const readTime = words / wordsPerMinute;
+
+  const estimatedReadTime = Math.ceil(readTime);
+  this.readtime = estimatedReadTime;
+  next();
+});
 
 const BlogPost = model<IBlogContent>("BlogPost", blogPostSchema);
 

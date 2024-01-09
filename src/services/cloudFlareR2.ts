@@ -30,22 +30,21 @@ const S3 = new S3Client({
   },
 });
 
-export const uploadImageFunction = async (
+export const uploadS3Function = async (
   next: NextFunction,
   fileData: IUploadParams
 ) => {
   try {
-    const fileName = `${fileData.fileName}-${Date.now}`;
+    const fileName = `${fileData.fileName}-${new Date().getTime()}`;
     const params: PutObjectCommandInput = {
       Bucket: "blog-dev",
-      Key: fileData.fileName,
+      Key: fileName,
       Body: fileData.fileContent,
       ContentType: fileData.contentType,
     };
     const uploadCommand = new PutObjectCommand(params);
     const res = await S3.send(uploadCommand);
-    console.log(res);
-    return `https://localhost.pkbmg.shop/logo.jpeg`;
+    return `https://localhost.pkbmg.shop/${fileName}`;
   } catch (error) {
     console.error("Error uploading image:", error);
     next(new AppError("Something terribly went wrong", 500));

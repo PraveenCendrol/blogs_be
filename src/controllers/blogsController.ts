@@ -1,19 +1,22 @@
+import { ObjectId } from "bson";
 import BlogPost, { IBlogContent } from "../models/blogsModal";
+import { uploadS3Function } from "../services/cloudFlareR2";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 import { successResponse } from "../utils/responseMessage";
 
 export const addBlog = catchAsync(async (req, res, next) => {
-  const { title, hashtags, content }: IBlogContent = req.body;
+  const { title, hashtags, content, images }: IBlogContent = req.body;
 
-  if (!content?.length)
-    return next(new AppError("Content is required for a blog", 400));
+  if (!content?.length || !title?.length)
+    return next(new AppError("Content and Title is required for a blog", 400));
 
   const blog = await BlogPost.create({
     title,
     author: req.user?._id,
     hashtags,
-    content,
+    content: content,
+    images: images,
   });
 
   return successResponse(res, "Blog added successfully", { id: blog._id }, 200);

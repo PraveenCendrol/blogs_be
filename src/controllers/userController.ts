@@ -13,6 +13,10 @@ export interface AuthRequest extends Request {
   user?: IUser;
 }
 
+export const verifytoken = catchAsync(async (req, res, next) => {
+  successResponse(res, "success", { status: "User verified" });
+});
+
 const signInToken = (id: mongoose.Types.ObjectId) => {
   let secret = process.env.JWT_SECRET ? process.env.JWT_SECRET : "none";
   const token = jwt.sign({ id }, secret, {
