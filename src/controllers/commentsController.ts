@@ -1,4 +1,5 @@
 import Comments from "../models/commentsModal";
+import Replies from "../models/repliesModal";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 import { successResponse } from "../utils/responseMessage";
@@ -12,6 +13,7 @@ export const addComments = catchAsync(async (req, res, next) => {
     blog_id,
     user_id,
   });
+  await commentDoc.populate("user_id");
   return successResponse(res, "Comment added successfully", commentDoc);
 });
 
@@ -50,6 +52,7 @@ export const deleteComment = catchAsync(async (req, res, next) => {
       new AppError("You do not have access to delete this comment.", 401)
     );
   }
+  const deleteRes = await Replies.deleteMany({ comment_id: _id });
   return successResponse(res, "Comment deleted successfully", {}, 204);
 });
 
@@ -70,10 +73,23 @@ export const getAllCommentPerBlog = catchAsync(async (req, res, next) => {
     blog_id: req.params.id,
   })
     .populate("user_id", "firstname lastname")
-    .populate("blog_id");
+    .sort({ createdAt: -1 });
 
   return successResponse(res, "All Comments posted for the blog", {
     total: allCommentsPerBlog.length,
     comments: allCommentsPerBlog,
+  });
+});
+
+export const countCommentPerBlog = catchAsync(async (req, res, next) => {
+  if (!req.params.id) {
+    return next(new AppError("No Blog Id Provided", 400));
+  }
+  const allCommentsPerBlog = await Comments.find({
+    blog_id: req.params.id,
+  });
+
+  return successResponse(res, "Total comments", {
+    totalComments: allCommentsPerBlog.length,
   });
 });
