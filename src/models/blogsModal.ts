@@ -1,3 +1,4 @@
+import cheerio from "cheerio";
 import mongoose, { Model, Schema, Types, model } from "mongoose";
 
 // Main Blog Type
@@ -9,6 +10,7 @@ export interface IBlogContent extends Document {
   author: Schema.Types.ObjectId;
   hashtags: string[];
   readtime: number;
+  blogImages: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,8 +38,9 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
     hashtags: {
       type: [String],
     },
-    images: {
-      type: [String],
+    blogImages: {
+      type: String,
+      default: "",
     },
     readtime: {
       type: Number,
@@ -56,6 +59,14 @@ blogPostSchema.pre<IBlogContent>("save", function (this, next) {
   const readTime = words / wordsPerMinute;
 
   const estimatedReadTime = Math.ceil(readTime);
+  const htmlString = this.content;
+  const $ = cheerio.load(htmlString);
+  const imgElements = $("img");
+  const src = $(imgElements[0]).attr("src");
+  if (src) {
+    this.blogImages = src;
+  }
+
   this.readtime = estimatedReadTime;
   next();
 });

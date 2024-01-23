@@ -4,6 +4,7 @@ import { uploadS3Function } from "../services/cloudFlareR2";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 import { successResponse } from "../utils/responseMessage";
+import { PipelineStage, SortOrder } from "mongoose";
 
 export const addBlog = catchAsync(async (req, res, next) => {
   const { title, hashtags, content, images }: IBlogContent = req.body;
@@ -52,4 +53,48 @@ export const updateBlog = catchAsync(async (req, res, next) => {
   return successResponse(res, `Updated successfully Blog ${_id}`, {
     updatedBlog,
   });
+});
+
+export const getBlogByQuery = catchAsync(async (req, res, next) => {
+  const totalCount = await BlogPost.estimatedDocumentCount();
+
+  const sort: SortOrder = (req.query.sort as SortOrder) || "desc";
+  const sort_type = req.query.sort_type || "createdAt";
+  const sortQuery: {
+    [key: string]: SortOrder;
+  } = {};
+  sortQuery[`${sort_type}`] = sort;
+  let limit: number;
+  if (!req.query.limit) {
+    limit = 2;
+  } else {
+    limit = parseInt(req.query.limit as string);
+  }
+
+  if (!req.query.page) {
+    var page = 1;
+  } else {
+    page = parseInt(req.query.page as string);
+  }
+
+  const totalPages = Math.ceil(totalCount / +limit);
+  const nextPage = +page < totalPages ? page + 1 : null;
+  const prevPage = page > 1 ? page - 1 : null;
+
+  const blogs = await BlogPost.find()
+    .sort(sortQuery)
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .select(["-content"])
+    .populate("author", ["firstname", "lastname", "avatar"]);
+  const response = {
+    total: totalCount,
+    totalPages,
+    currentPage: page,
+    prevPage,
+    nextPage: nextPage,
+    blogs: blogs,
+  };
+
+  return successResponse(res, `Blogs for page:${page} `, response);
 });
