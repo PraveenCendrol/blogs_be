@@ -13,7 +13,7 @@ export interface IBlogContent extends Document {
   blogImages: string;
   createdAt: Date;
   updatedAt: Date;
-  final: () => void;
+  pin: boolean;
 }
 
 // content schema
@@ -46,6 +46,10 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
     readtime: {
       type: Number,
       default: 0,
+    },
+    pin: {
+      type: Boolean,
+      default: false,
     },
   },
   {

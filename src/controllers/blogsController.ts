@@ -62,7 +62,7 @@ export const getBlogByQuery = catchAsync(async (req, res, next) => {
   const sort_type = req.query.sort_type || "createdAt";
   const sortQuery: {
     [key: string]: SortOrder;
-  } = {};
+  } = { pin: -1 };
   sortQuery[`${sort_type}`] = sort;
   let limit: number;
   if (!req.query.limit) {
