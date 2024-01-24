@@ -11,6 +11,7 @@ import RepliesRoute from "./routes/repliesRoute";
 import CategoryRouter from "./routes/categoriesRoute";
 import cors from "cors";
 import ImagesRouter from "./routes/imageRoute";
+import ReviewsRouter from "./routes/reviewsRoute";
 dotenv.config();
 
 const app: Express = express();
@@ -29,6 +30,7 @@ app.use("/user-reaction", UserReactionRoute);
 app.use("/comment", CommentsRouter);
 app.use("/reply", RepliesRoute);
 app.use("/category", CategoryRouter);
+app.use("/review", ReviewsRouter);
 
 const url =
   process.env.MONGO_DB_URL && process.env.MONGO_DB_PASSWORD
@@ -37,8 +39,6 @@ const url =
         process.env.MONGO_DB_PASSWORD
       )
     : "";
-
-console.log(url);
 
 mongoose.connect(url).then((e) => console.log("DB Connected successfully"));
 app.all("*", (req: Request, res: Response, next: NextFunction) => {

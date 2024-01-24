@@ -13,6 +13,7 @@ export interface IBlogContent extends Document {
   blogImages: string;
   createdAt: Date;
   updatedAt: Date;
+  final: () => void;
 }
 
 // content schema
