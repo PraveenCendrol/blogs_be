@@ -17,7 +17,7 @@ export const addBlog = catchAsync(async (req, res, next) => {
     author: req.user?._id,
     hashtags,
     content: content,
-    images: images,
+    filterImages: images,
   });
 
   return successResponse(res, "Blog added successfully", { id: blog._id }, 200);

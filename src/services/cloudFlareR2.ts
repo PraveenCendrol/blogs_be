@@ -1,13 +1,11 @@
-import dotenv from "dotenv";
 import {
-  S3Client,
-  ListBucketsCommand,
-  ListObjectsV2Command,
-  GetObjectCommand,
+  DeleteObjectCommand,
+  DeleteObjectCommandInput,
   PutObjectCommand,
-  PutObjectRequest,
   PutObjectCommandInput,
+  S3Client,
 } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
 
 import { NextFunction } from "express";
 import AppError from "../utils/appError";
@@ -37,7 +35,7 @@ export const uploadS3Function = async (
   try {
     const fileName = `${fileData.fileName}-${new Date().getTime()}`;
     const params: PutObjectCommandInput = {
-      Bucket: "blog-dev",
+      Bucket: R2_BUCKET_NAME,
       Key: fileName,
       Body: fileData.fileContent,
       ContentType: fileData.contentType,
@@ -49,5 +47,22 @@ export const uploadS3Function = async (
     console.error("Error uploading image:", error);
     next(new AppError("Something terribly went wrong", 500));
     return null;
+  }
+};
+
+export const deleteS3Function = async (fileKey: string) => {
+  const input: DeleteObjectCommandInput = {
+    Bucket: R2_BUCKET_NAME,
+    Key: fileKey,
+  };
+  const deleteCommand = new DeleteObjectCommand(input);
+
+  try {
+    await S3.send(deleteCommand);
+    return "File Deleted Successfully";
+  } catch (error) {
+    console.log(
+      `Failed to delete the file with key "${fileKey}" from AWS S3 bucket `
+    );
   }
 };

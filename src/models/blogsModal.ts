@@ -1,5 +1,6 @@
 import cheerio from "cheerio";
 import mongoose, { Model, Schema, Types, model } from "mongoose";
+import { deleteS3Function } from "../services/cloudFlareR2";
 
 // Main Blog Type
 
@@ -11,6 +12,7 @@ export interface IBlogContent extends Document {
   hashtags: string[];
   readtime: number;
   blogImages: string;
+  filterImages: string[] | null | undefined;
   createdAt: Date;
   updatedAt: Date;
   pin: boolean;
@@ -47,6 +49,10 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
       type: Number,
       default: 0,
     },
+    filterImages: {
+      type: [String],
+      default: null,
+    },
     pin: {
       type: Boolean,
       default: false,
@@ -58,7 +64,21 @@ const blogPostSchema: Schema<IBlogContent> = new Schema<
   }
 );
 
-blogPostSchema.pre<IBlogContent>("save", function (this, next) {
+export function extractFilenameFromUrl(url: string): string | null {
+  const prefix = "https://localhost.pkbmg.shop/";
+  const startIndex = url.indexOf(prefix);
+
+  if (startIndex !== -1) {
+    // Adding the length of the prefix to get the start index of the filename
+    const filenameStart = startIndex + prefix.length;
+    const filename = url.substring(filenameStart);
+    return filename;
+  } else {
+    // If the prefix is not found, return null or handle it accordingly
+    return null;
+  }
+}
+blogPostSchema.pre<IBlogContent>("save", async function (this, next) {
   const wordsPerMinute = 200;
   const words = this.content.trim().split(/\s+/).length;
   const readTime = words / wordsPerMinute;
@@ -67,12 +87,22 @@ blogPostSchema.pre<IBlogContent>("save", function (this, next) {
   const htmlString = this.content;
   const $ = cheerio.load(htmlString);
   const imgElements = $("img");
-  const src = $(imgElements[0]).attr("src");
-  if (src) {
-    this.blogImages = src;
+  let srcList: string[] = [];
+  for (const i of imgElements) {
+    srcList.push($(i).attr("src") || "");
+  }
+  for (const i of this.filterImages || []) {
+    if (!srcList.includes(i)) {
+      let extractValue = extractFilenameFromUrl(i) || "";
+      await deleteS3Function(extractValue);
+    }
+  }
+  if (srcList[0]) {
+    this.blogImages = srcList[0];
   }
 
   this.readtime = estimatedReadTime;
+  this.filterImages = undefined;
   next();
 });
 

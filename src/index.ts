@@ -12,6 +12,7 @@ import CategoryRouter from "./routes/categoriesRoute";
 import cors from "cors";
 import ImagesRouter from "./routes/imageRoute";
 import ReviewsRouter from "./routes/reviewsRoute";
+import { deleteS3Function } from "./services/cloudFlareR2";
 dotenv.config();
 
 const app: Express = express();
@@ -23,6 +24,14 @@ app.get("/", (req: Request, res: Response) => {
   Welcome to my Blog but don't stay for long time 
   </div>`);
 });
+
+// app.get("/:image_name", async (req, res, next) => {
+//   const del = await deleteS3Function(next, req.params.image_name);
+
+//   res.status(200).json({
+//     finished: "True",
+//   });
+// });
 app.use("/image", ImagesRouter);
 app.use("/user", UserRouter);
 app.use("/blogs", BlogsRouter);
@@ -49,5 +58,5 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
 
 app.use(errorHandler);
 app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
+  console.log(`[server]: Server is running at ${port}`);
 });
